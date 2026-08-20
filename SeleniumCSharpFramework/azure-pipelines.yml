@@ -60,23 +60,4 @@ steps:
     condition: succeededOrFailed()
     inputs:
       testResultsFormat: 'VSTest'
-      testResultsFiles: '$(Agent.TempDirectory)/TestResults/*.trx'
-      failTaskOnFailedTests: true
-  - task: CmdLine@2
-    displayName: 'List output directories (debug)'
-    condition: succeededOrFailed()
-    inputs:
-      script: |
-        echo ---- Agent.TempDirectory contents ----
-        dir /s /b "$(Agent.TempDirectory)"
-        echo ---- Searching repo for html reports ----
-        dir /s /b "$(System.DefaultWorkingDirectory)\*.html"
-        echo ---- Searching repo for bin folders ----
-        dir /s /b "$(System.DefaultWorkingDirectory)\bin"
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish ExtentReport Artifact'
-    condition: succeededOrFailed()
-    inputs:
-      PathtoPublish: '$(System.DefaultWorkingDirectory)/**/bin/$(buildConfiguration)/**/TestResults'
-      ArtifactName: 'ExtentReport'
-      publishLocation: 'Container'
+      testResultsFiles:
