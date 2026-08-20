@@ -1,3 +1,4 @@
+
 # Azure DevOps pipeline for Selenium C# + NUnit + ExtentReports automation
 # CI trigger: runs Smoke suite on every push to main/develop
 # Nightly schedule: runs full Regression suite
@@ -60,5 +61,20 @@ steps:
     condition: succeededOrFailed()
     inputs:
       testResultsFormat: 'VSTest'
-      testResultsFiles:
-    
+      testResultsFiles: '$(Agent.TempDirectory)/TestResults/*.trx'
+      failTaskOnFailedTests: true
+  - task: CopyFiles@2
+    displayName: 'Stage ExtentReport Files'
+    condition: succeededOrFailed()
+    inputs:
+      SourceFolder: '$(System.DefaultWorkingDirectory)'
+      Contents: '**/bin/$(buildConfiguration)/**/TestResults/**'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/ExtentReport'
+      flattenFolders: false
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish ExtentReport Artifact'
+    condition: succeededOrFailed()
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/ExtentReport'
+      ArtifactName: 'ExtentReport'
+      publishLocation: 'Container'
