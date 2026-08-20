@@ -50,6 +50,11 @@ steps:
     inputs:
       command: 'test'
       projects: '**/*.csproj'
+      # publishTestResults defaults to true, which makes this task auto-inject its own
+      # --logger trx / --results-directory into the command — duplicating the ones below
+      # and causing "expects a single argument but 2 were provided". We publish results
+      # ourselves via the PublishTestResults@2 step, so turn the auto-injection off.
+      publishTestResults: false
       arguments: >
         --configuration $(buildConfiguration)
         --filter "Category=$(testCategory)"
