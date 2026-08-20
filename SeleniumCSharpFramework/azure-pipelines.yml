@@ -23,6 +23,7 @@ variables:
   buildConfiguration: 'Release'
   # 'Smoke' on CI-triggered runs, overridden to 'Regression' for the nightly schedule below
   testCategory: 'Smoke'
+  HEADLESS: 'true'             # forces headless Chrome for every step in this job (hosted agents have no display)
 
 steps:
   - task: UseDotNet@2
@@ -55,7 +56,8 @@ steps:
         --logger trx
         --results-directory $(Agent.TempDirectory)/TestResults
     env:
-      CI: 'true'               # tells DriverFactory to run Chrome headless on the agent
+      CI: 'true'                    # tells DriverFactory to run Chrome headless on the agent
+      HEADLESS: $(HEADLESS)         # explicit override, read directly by BaseTest.cs
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results to Azure DevOps'

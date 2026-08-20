@@ -19,9 +19,17 @@ namespace SeleniumCSharpFramework.Tests
         [SetUp]
         public void SetUp()
         {
-            // CI=true is set automatically by Azure DevOps hosted agents -> run headless there
-            bool runHeadless = Environment.GetEnvironmentVariable("CI") == "true" ||
-                                Environment.GetEnvironmentVariable("TF_BUILD") == "True";
+            // CI=true / TF_BUILD=True are set automatically by Azure DevOps hosted agents -> run headless there.
+            // HEADLESS lets you force it explicitly (e.g. from the pipeline yaml) regardless of auto-detection.
+            bool runHeadless =
+                string.Equals(Environment.GetEnvironmentVariable("HEADLESS"), "true", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(Environment.GetEnvironmentVariable("CI"), "true", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(Environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase);
+
+            Console.WriteLine($"[BaseTest] CI={Environment.GetEnvironmentVariable("CI")}, " +
+                               $"TF_BUILD={Environment.GetEnvironmentVariable("TF_BUILD")}, " +
+                               $"HEADLESS={Environment.GetEnvironmentVariable("HEADLESS")}, " +
+                               $"runHeadless={runHeadless}");
 
             DriverFactory.InitDriver(headless: runHeadless);
             ExtentReportManager.CreateTest(TestContext.CurrentContext.Test.Name);
