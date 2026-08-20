@@ -80,9 +80,9 @@ steps:
       ArtifactName: 'ExtentReport'
       publishLocation: 'Container'
 
-    - task: CmdLine@2
-  displayName: 'List output directories'
-  inputs:
-    script: |
+  - task: CmdLine@2
+    displayName: 'List output directories'
+    inputs:
+      script: |
       dir /s /b D:\a\1\s\*.html
       dir /s /b D:\a\1\s\bin
