@@ -1,13 +1,11 @@
 # Azure DevOps pipeline for Selenium C# + NUnit + ExtentReports automation
 # CI trigger: runs Smoke suite on every push to main/develop
 # Nightly schedule: runs full Regression suite
-
 trigger:
   branches:
     include:
       - main
       - develop
-
 schedules:
   - cron: "0 2 * * *"          # 2 AM daily
     displayName: "Nightly Regression Run"
@@ -15,36 +13,30 @@ schedules:
       include:
         - main
     always: true
-
 pool:
   vmImage: 'windows-latest'    # Chrome + ChromeDriver are preinstalled on this image
-
 variables:
   buildConfiguration: 'Release'
   # 'Smoke' on CI-triggered runs, overridden to 'Regression' for the nightly schedule below
   testCategory: 'Smoke'
   HEADLESS: 'true'             # forces headless Chrome for every step in this job (hosted agents have no display)
-
 steps:
   - task: UseDotNet@2
     displayName: 'Install .NET 8 SDK'
     inputs:
       packageType: 'sdk'
       version: '8.x'
-
   - task: DotNetCoreCLI@2
     displayName: 'Restore NuGet Packages'
     inputs:
       command: 'restore'
       projects: '**/*.csproj'
-
   - task: DotNetCoreCLI@2
     displayName: 'Build Solution'
     inputs:
       command: 'build'
       projects: '**/*.csproj'
       arguments: '--configuration $(buildConfiguration)'
-
   - task: DotNetCoreCLI@2
     displayName: 'Run Automated Tests'
     inputs:
@@ -63,7 +55,6 @@ steps:
     env:
       CI: 'true'                    # tells DriverFactory to run Chrome headless on the agent
       HEADLESS: $(HEADLESS)         # explicit override, read directly by BaseTest.cs
-
   - task: PublishTestResults@2
     displayName: 'Publish Test Results to Azure DevOps'
     condition: succeededOrFailed()
@@ -71,7 +62,17 @@ steps:
       testResultsFormat: 'VSTest'
       testResultsFiles: '$(Agent.TempDirectory)/TestResults/*.trx'
       failTaskOnFailedTests: true
-
+  - task: CmdLine@2
+    displayName: 'List output directories (debug)'
+    condition: succeededOrFailed()
+    inputs:
+      script: |
+        echo ---- Agent.TempDirectory contents ----
+        dir /s /b "$(Agent.TempDirectory)"
+        echo ---- Searching repo for html reports ----
+        dir /s /b "$(System.DefaultWorkingDirectory)\*.html"
+        echo ---- Searching repo for bin folders ----
+        dir /s /b "$(System.DefaultWorkingDirectory)\bin"
   - task: PublishBuildArtifacts@1
     displayName: 'Publish ExtentReport Artifact'
     condition: succeededOrFailed()
@@ -79,10 +80,3 @@ steps:
       PathtoPublish: '$(System.DefaultWorkingDirectory)/**/bin/$(buildConfiguration)/**/TestResults'
       ArtifactName: 'ExtentReport'
       publishLocation: 'Container'
-
-  - task: CmdLine@2
-    displayName: 'List output directories'
-    inputs:
-      script: |
-        dir /s /b D:\a\1\s\*.html
-        dir /s /b D:\a\1\s\bin
