@@ -1,0 +1,19 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+
+## Test results / reports
+TestResults/
+*.trx
+
+## IDE
+.vs/
+.vscode/
+*.userosscache
+*.sln.docstates
+
+## OS
+.DS_Store
+Thumbs.db

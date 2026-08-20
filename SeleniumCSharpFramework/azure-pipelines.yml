@@ -1,0 +1,74 @@
+# Azure DevOps pipeline for Selenium C# + NUnit + ExtentReports automation
+# CI trigger: runs Smoke suite on every push to main/develop
+# Nightly schedule: runs full Regression suite
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+schedules:
+  - cron: "0 2 * * *"          # 2 AM daily
+    displayName: "Nightly Regression Run"
+    branches:
+      include:
+        - main
+    always: true
+
+pool:
+  vmImage: 'windows-latest'    # Chrome + ChromeDriver are preinstalled on this image
+
+variables:
+  buildConfiguration: 'Release'
+  # 'Smoke' on CI-triggered runs, overridden to 'Regression' for the nightly schedule below
+  testCategory: 'Smoke'
+
+steps:
+  - task: UseDotNet@2
+    displayName: 'Install .NET 8 SDK'
+    inputs:
+      packageType: 'sdk'
+      version: '8.x'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Restore NuGet Packages'
+    inputs:
+      command: 'restore'
+      projects: '**/*.csproj'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Build Solution'
+    inputs:
+      command: 'build'
+      projects: '**/*.csproj'
+      arguments: '--configuration $(buildConfiguration)'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Run Automated Tests'
+    inputs:
+      command: 'test'
+      projects: '**/*.csproj'
+      arguments: >
+        --configuration $(buildConfiguration)
+        --filter "Category=$(testCategory)"
+        --logger trx
+        --results-directory $(Agent.TempDirectory)/TestResults
+    env:
+      CI: 'true'               # tells DriverFactory to run Chrome headless on the agent
+
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results to Azure DevOps'
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: 'VSTest'
+      testResultsFiles: '$(Agent.TempDirectory)/TestResults/*.trx'
+      failTaskOnFailedTests: true
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish ExtentReport Artifact'
+    condition: succeededOrFailed()
+    inputs:
+      PathtoPublish: '$(System.DefaultWorkingDirectory)/**/bin/$(buildConfiguration)/**/TestResults'
+      ArtifactName: 'ExtentReport'
+      publishLocation: 'Container'

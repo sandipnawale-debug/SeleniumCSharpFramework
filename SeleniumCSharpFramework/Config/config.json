@@ -1,0 +1,11 @@
+{
+  "BaseUrl": "https://your-app-url.com",
+  "Browser": "Chrome",
+  "Headless": false,
+  "ImplicitWaitSeconds": 0,
+  "ExplicitWaitSeconds": 15,
+  "PageLoadTimeoutSeconds": 30,
+  "ScreenshotOnFailure": true,
+  "ReportPath": "Reports/",
+  "Environment": "QA"
+}
